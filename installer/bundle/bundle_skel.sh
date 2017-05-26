@@ -61,6 +61,9 @@ UNSUPPORTED_OPENSSL=60
 INSTALL_PYTHON_CTYPES=61
 INSTALL_TAR=62
 INSTALL_SED=63
+#Reserved error codes that are coming from Base_DSC.data from PowerShell-DSC-for-Linux repo
+#INSTALL_CURL=64
+#INSTALL_GPG=65
 
 usage()
 {
@@ -838,9 +841,8 @@ if [ -n "${checkVersionAndCleanUp}" ]; then
 
     # omsconfig
     versionInstalled=`getInstalledVersion omsconfig`
-    versionAvailable=`getVersionNumber $DSC_PKG omsconfig-`
-    if ! python_ctypes_installed > /dev/null 2>&1; then ctypes_text=" (No ctypes)"; fi
-    if shouldInstall_omsconfig; then shouldInstall="Yes"; else shouldInstall="No${ctypes_text}"; fi
+    versionAvailable=`getVersionNumber $DSC_PKG omsconfig-`    
+    if shouldInstall_omsconfig; then shouldInstall="Yes"; else shouldInstall="No (No ctypes)"; fi
     printf '%-15s%-15s%-15s%-15s\n' omsconfig $versionInstalled $versionAvailable "$shouldInstall"
     cleanup_and_exit 0
 fi
@@ -871,10 +873,7 @@ case "$installMode" in
 
             pkg_add_list $OMS_PKG omsagent
 
-            python_ctypes_installed
-            if [ $? -eq 0 ]; then
-                pkg_add_list $DSC_PKG omsconfig
-            fi
+            pkg_add_list $DSC_PKG omsconfig
 
             # Install SCX (and OMI)
             [ -n "${forceFlag}" ] && FORCE="--force" || FORCE=""
@@ -951,11 +950,8 @@ case "$installMode" in
         shouldInstall_omsagent
         pkg_upd_list $OMS_PKG omsagent $?
 
-        python_ctypes_installed
-        if [ $? -eq 0 ]; then
-            shouldInstall_omsconfig
-            pkg_upd_list $DSC_PKG omsconfig $?
-        fi
+        shouldInstall_omsconfig
+        pkg_upd_list $DSC_PKG omsconfig $?
 
         # Install SCX (and OMI)
         [ -n "${forceFlag}" ] && FORCE="--force" || FORCE=""
